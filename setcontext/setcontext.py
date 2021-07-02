@@ -71,12 +71,12 @@ class SetContext(object):
 
 
     def print_project_env_var(self):
-        print (os.environ['PROJECT'])
         self.pprint(os.environ['PROJECT'], 'red', 2)
         self.pprint(os.environ['SERVICE'], 'red', 2)
         self.pprint(os.environ['VERSION'], 'red', 2)
 
-    def pprint(self, msg, color, indent=0):
+    @classmethod
+    def pprint(cls, msg, color, indent=0):
         cprint("\t"*indent + msg, color)
 
 
