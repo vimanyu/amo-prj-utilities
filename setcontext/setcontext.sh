@@ -15,18 +15,15 @@ validate_gcloud_project () {
 	fi
 }
 
-create_directories () {
+change_directory () {
 	
-	echo Creating directories...
-	#validate google project
-
-
+	tput setaf 3;echo Creating directories... | sed 's/^/  /'
 	local output_dir=$(python /Users/andrewoseen/git/amo-prj-utilities/setcontext/main.py $1)
-	echo Echoing: $output_dir
 	cd $output_dir
 }
 
 create_conda_env () {
+  tput setaf 3; echo Creating conda env: $context | sed 's/^/  /'
 	conda create -y -q --name $1 python=3.8
 	conda activate $1
 	#pip install requirements for a flask project
@@ -34,24 +31,27 @@ create_conda_env () {
 }
 
 initialize_git_repo () {
+  tput setaf 3;echo Initializing Git... | sed 's/^/  /'
 	git init
+	hub create
 
-}
-
-setcontext () {
-	local context=$1
-	
-	validate_gcloud_project $context
-	#create_directories $context
-	#create_conda_env $context
-	#initialize_git_repo
 }
 
 newcontext () {
 	local context=$1
-
-	tput setaf 4; echo Creating new context: $1
+	
 	validate_gcloud_project $context
+	change_directory $context
+	create_conda_env $context
+	initialize_git_repo
+}
+
+setcontext () {
+	local context=$1
+
+	tput setaf 4; echo Setting context: $1
+	change_directory $context
+	conda activate $context
 
 }
 
