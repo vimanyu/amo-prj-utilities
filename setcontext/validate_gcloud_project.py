@@ -19,7 +19,7 @@ def validate_project_name(name : str) -> bool:
         return False
 
 
-def validate_gcloud_projects():
+def validate_gcloud_projects(project_name:str) -> bool:
     output = subprocess.check_output("gcloud projects list --format json".split(" "))
     json_str = output.decode('utf-8')
     json_data = json.loads(json_str)
@@ -36,13 +36,10 @@ if __name__ == '__main__':
     arg = sys.argv[1]
     if (len(sys.argv) == 2):
         arg = sys.argv[1]
-        if validate_project_name(arg):
-            if validate_gcloud_projects():
-                print (0)
-            else:
-                print (1)
+        if validate_project_name(arg) and validate_gcloud_projects(arg):
+            print (0)
         else:
-            print(1)
+            print (1)
 
 
 

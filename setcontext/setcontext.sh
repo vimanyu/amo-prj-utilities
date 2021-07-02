@@ -1,22 +1,16 @@
-#!/bin/bash
+alias validate_gcloud_py='/Users/andrewoseen/git/amo-prj-utilities/validate_project_name/main.py'
+alias create_dir_py='/Users/andrewoseen/git/amo-prj-utilities/setcontext/main.py'
 
-context=$1
-
-new_conda_env () { conda create -y -q --name "$1" python=3.8 && conda activate "$1" && pip install flask;}
-
-
-#new_flask_project () {pip install flask -y && ;}
 
 validate_gcloud_project () {
 
-	echo Validating gcloud project $context
-	local valid_project=$(python validate_gcloud_project.py $context)
-	echo testing: $valid_project
+	tput setaf 3; echo Validating gcloud project: $context | sed 's/^/  /'
+	local valid_project=$(python /Users/andrewoseen/git/amo-prj-utilities/setcontext/validate_gcloud_project.py $1)
 	if [ $valid_project -eq 0 ]
 	then
-		echo $context is a valid project
+		tput setaf 2; echo $context is a valid project | sed 's/^/    /'
 	else
-		echo $context is not a valid project
+		tput setaf 1; echo $context is not a valid project | sed 's/^/    /'
 		Exit 1
 	fi
 }
@@ -27,13 +21,38 @@ create_directories () {
 	#validate google project
 
 
-	local output_dir=$(python main.py $context)
+	local output_dir=$(python /Users/andrewoseen/git/amo-prj-utilities/setcontext/main.py $1)
 	echo Echoing: $output_dir
 	cd $output_dir
 }
-#$SHELL
 
+create_conda_env () {
+	conda create -y -q --name $1 python=3.8
+	conda activate $1
+	#pip install requirements for a flask project
+	pip install flask
+}
 
-validate_gcloud_project
+initialize_git_repo () {
+	git init
+
+}
+
+setcontext () {
+	local context=$1
+	
+	validate_gcloud_project $context
+	#create_directories $context
+	#create_conda_env $context
+	#initialize_git_repo
+}
+
+newcontext () {
+	local context=$1
+
+	tput setaf 4; echo Creating new context: $1
+	validate_gcloud_project $context
+
+}
 
 
