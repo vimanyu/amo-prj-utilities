@@ -17,36 +17,44 @@ from termcolor import cprint
 function to handle bad version string
 """
 
+
+def valid_envvar(self, var: str) -> bool:
+    return (var not in os.environ.keys()) and (os.environ[var] != "")
+
+def validate_project_name(self, name: str) -> bool:
+    patterns = '^[a-z0-9/-]*$'
+    if re.search(patterns, name):
+        return True
+    else:
+        return False
+
+def validate_gcloud_projects(self, project_name: str) -> bool:
+    output = subprocess.check_output("gcloud projects list --format json".split(" "))
+    json_str = output.decode('utf-8')
+    json_data = json.loads(json_str)
+    project_names = [project['name'] for project in json_data]
+
+    return False if project_name in project_names else True
+
 class SetContext(object):
 
-    def validate_project_name(self, name: str) -> bool:
-        patterns = '^[a-z0-9/-]*$'
-        if re.search(patterns, name):
-            return True
-        else:
-            return False
 
-    def validate_gcloud_projects(self, project_name: str) -> bool:
-        output = subprocess.check_output("gcloud projects list --format json".split(" "))
-        json_str = output.decode('utf-8')
-        json_data = json.loads(json_str)
-        project_names = [project['name'] for project in json_data]
+    #memoize
 
-        return False if project_name in project_names else True
 
 
     """This is really gross but I dont really have a choice."""
     """eval `python setcontext.py set_env "myprj:myserv:v001"`"""
     def set_env(self, project_name=None):
 
-
-        project = None
-        service = None
-        version = None
+        project = ""
+        service = ""
+        version = ""
 
         # replace with argparse for better error handling and help?
         if not ":" in project_name:
             project = project_name
+            version = ""
 
         else:
             split_context = project_name.split(":")
@@ -62,18 +70,77 @@ class SetContext(object):
         if self.validate_project_name(project):
             print(f"echo Setting PROJECT to {project};")
             print(f"export PROJECT={project};")
-            if service:
-                print(f"echo Setting SERVICE to {service};")
-                print(f"export SERVICE={service};")
-            if version:
-                print(f"echo Setting VERSION to {version};")
-                print(f"export VERSION={version};")
 
+            print(f"echo Setting SERVICE to {service};")
+            print(f"export SERVICE={service};")
+
+            print(f"echo Setting VERSION to {version};")
+            print(f"export VERSION={version};")
+
+
+    """eval `python setcontext.py set_terminal_prompt`"""
+    def set_terminal_prompt(self):
+        "todo: colors!"
+        prompt_string = 'PS1="'
+        if "PROJECT" in os.environ.keys() and os.environ['PROJECT'] != '':
+            prompt_string += "${PROJECT}"
+        if "SERVICE" in os.environ.keys() and os.environ["SERVICE"] != '':
+            prompt_string += ":${SERVICE}"
+        if "VERSION" in os.environ.keys() and os.environ["SERVICE"] != '':
+            prompt_string += ":${VERSION}"
+
+        prompt_string += ' > "'
+        print(prompt_string)
+
+
+    def create_project(self):
+        pass
+
+    def set_project(self):
+        print("conda activate ${PROJECT}")
+        self.set_terminal_prompt()
+        print("git init")
+        print("hub create")
 
     def print_project_env_var(self):
         self.pprint(os.environ['PROJECT'], 'red', 2)
         self.pprint(os.environ['SERVICE'], 'red', 2)
         self.pprint(os.environ['VERSION'], 'red', 2)
+
+
+
+
+    def setcontext(self, context: str):
+        """
+        Main program to call all the sub functions for setting context between projects.
+        This generates a bash script to be called from the shell and evaluated.
+
+        Ex:
+        eval `python setcontext.py setcontext my_project_name:my_service_or_module/v<001-999>
+
+        :param context:
+            A string to determine where you are working. project:service:version
+        """
+        if not valid_envvar("PROJECT"):
+            #create project
+            self.validate_project_name(context)
+            self.validate_gcloud_projects()
+            self.set_env()
+            self.set_terminal_prompt()
+        else:
+            #set path to change dir
+            #set conda env
+            #set gcloud project
+            #set terminal prompt
+            #serach for service
+            if not valid_envvar("SERVICE"):
+                #create service
+
+            else:
+
+                #change to service
+
+
 
     @classmethod
     def pprint(cls, msg, color, indent=0):
