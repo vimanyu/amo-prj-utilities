@@ -18,8 +18,8 @@ function to handle bad version string
 """
 
 
-def valid_envvar(self, var: str) -> bool:
-    return (var not in os.environ.keys()) and (os.environ[var] != "")
+def valid_envvar(var: str) -> bool:
+    return (var in os.environ.keys()) and (os.environ[var] != "")
 
 def validate_project_name(self, name: str) -> bool:
     patterns = '^[a-z0-9/-]*$'
@@ -38,7 +38,33 @@ def validate_gcloud_projects(self, project_name: str) -> bool:
 
 class SetContext(object):
 
+    def build_directory_path(self):
+        """
+        This builds the path of the project from environment variables. If no project environment variables exist,
+        Then the directory defaults to ~/git
 
+        eval `python setcontext.py build_directory_path`
+        """
+        path = pathlib.Path.home() / "git"
+        if valid_envvar("PROJECT"):
+            path /= os.environ['PROJECT']
+
+        if valid_envvar("SERVICE"):
+            path /= os.environ['SERVICE']
+
+        if valid_envvar("VERSION"):
+            path /= os.environ['VERSION']
+
+        # add beta or alpha flags
+
+        path_str = path.absolute().as_posix()
+
+        if path.is_dir():
+            print(path_str)
+
+        else:
+            path.mkdir(parents=True, exist_ok=True)
+            print(path_str)
     #memoize
 
 
@@ -80,16 +106,16 @@ class SetContext(object):
 
     """eval `python setcontext.py set_terminal_prompt`"""
     def set_terminal_prompt(self):
-        "todo: colors!"
-        prompt_string = 'PS1="'
-        if "PROJECT" in os.environ.keys() and os.environ['PROJECT'] != '':
-            prompt_string += "${PROJECT}"
-        if "SERVICE" in os.environ.keys() and os.environ["SERVICE"] != '':
-            prompt_string += ":${SERVICE}"
-        if "VERSION" in os.environ.keys() and os.environ["SERVICE"] != '':
-            prompt_string += ":${VERSION}"
+        prompt_string = "PS1="
+        if valid_envvar("PROJECT"):
+            prompt_string += "'%F{55}'${PROJECT}"
+        if valid_envvar("SERVICE"):
+            prompt_string += "'%F{default}:%F{46}'${SERVICE}"
+        if valid_envvar("VERSION"):
+            prompt_string += "'%F{default}:%F{38}'${VERSION}"
 
-        prompt_string += ' > "'
+
+        prompt_string += "'%F{default} >> '"
         print(prompt_string)
 
 
@@ -98,14 +124,17 @@ class SetContext(object):
 
     def set_project(self):
         print("conda activate ${PROJECT}")
+        #print("PROJECT")
         self.set_terminal_prompt()
         print("git init")
         print("hub create")
 
-    def print_project_env_var(self):
+    def print_project_variables(self):
         self.pprint(os.environ['PROJECT'], 'red', 2)
         self.pprint(os.environ['SERVICE'], 'red', 2)
         self.pprint(os.environ['VERSION'], 'red', 2)
+
+
 
 
 
@@ -135,9 +164,10 @@ class SetContext(object):
             #serach for service
             if not valid_envvar("SERVICE"):
                 #create service
+                pass
 
             else:
-
+                pass
                 #change to service
 
 
@@ -158,28 +188,7 @@ def validate_version_str(version_string: str):
 
 
 
-def set_directory():
-    path = pathlib.Path.home() / "git"
-    project, service, version = None
-    if project is not None:
-        path /= project
 
-    if service is not None:
-        path /= service
-
-    if version is not None:
-        path /= version
-
-    # add beta or alpha flags
-
-    path_str = path.absolute().as_posix()
-
-    if path.is_dir():
-        print(path_str)
-
-    else:
-        path.mkdir(parents=True, exist_ok=True)
-        print(path_str)
 
 
 if __name__ == '__main__':
