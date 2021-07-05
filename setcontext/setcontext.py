@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import fire
 import json
@@ -31,6 +30,40 @@ class CONTEXT:
     SERVICE = "SERVICE"
     VERSION = "VERSION"
 
+def getProject():
+    """
+
+    Get PROJECT environment variable
+
+    :return:
+        return the project environmnet variable
+
+    """
+
+    return os.environ[CONTEXT.PROJECT]
+
+def getService():
+    """
+
+    Get SERVICE environment variable
+
+    :return:
+        return the service environmnet variable
+
+    """
+    return os.environ[CONTEXT.SERVICE]
+
+def getVersion():
+    """
+
+    Get VERSION environment variable
+
+    :return:
+        return the version environmnet variable
+
+    """
+    return os.environ[CONTEXT.VERSION]
+
 
 def is_environment_variable_valid(var: str) -> bool:
     """
@@ -41,7 +74,9 @@ def is_environment_variable_valid(var: str) -> bool:
         Name of the environment variable. Should only use a CONTEXT member variable.
     :return:
     """
+
     return (var in os.environ.keys()) and (os.environ[var] != "")
+
 
 def is_project_name_valid_for_gcloud(name: str) -> bool:
     """
@@ -53,11 +88,13 @@ def is_project_name_valid_for_gcloud(name: str) -> bool:
     :return:
         True if name only has lower space letters, digits and a dash
     """
+
     patterns = '^[a-z0-9/-]*$'
     if re.search(patterns, name):
         return True
     else:
         return False
+
 
 def does_gcloud_project_exist(project_name: str) -> bool:
     """
@@ -69,12 +106,17 @@ def does_gcloud_project_exist(project_name: str) -> bool:
     :return: bool
         True if a gcloud project exists with the name of project_name
     """
+
     output = subprocess.check_output("gcloud projects list --format json".split(" "))
     json_str = output.decode('utf-8')
     json_data = json.loads(json_str)
-    project_names = [project['name'] for project in json_data]
 
-    return False if project_name in project_names else True
+    project_names = [project['name'] for project in json_data]
+    prjnames = " ".join(project_names)
+    print(f"echo Gcloud projects : {prjnames};")
+
+    return True if project_name in project_names else False
+
 
 def does_project_exist(project_name: str) -> bool:
     """
@@ -87,9 +129,16 @@ def does_project_exist(project_name: str) -> bool:
         True if a folder of name project_name exists in the local git repo.
 
     """
+
     path = PATH
     path /= project_name
+    is_dir = path.is_dir()
+    if is_dir:
+        print(f"echo Project exists: {path};")
+    else:
+        print(f"echo Project does not exist: {path};")
     return path.is_dir()
+
 
 def does_service_version_exist(service_or_version_name: str) -> bool:
     """
@@ -102,9 +151,11 @@ def does_service_version_exist(service_or_version_name: str) -> bool:
     :return: bool
         True if the path is an existing directory.
     """
+
     path = pathlib.Path.cwd()
     path /= service_or_version_name
     return path.is_dir()
+
 
 def is_version_string_valid(version_string: str) -> bool:
     """
@@ -115,9 +166,12 @@ def is_version_string_valid(version_string: str) -> bool:
         A string in the format v<XXX>
     :return:  bool
         True if version_string starts with v, and ends with 3 numbers.
+
     """
+
     #replace with regex
     return version_string.startswith("v") and version_string[1:].isdigit() and len(version_string) == 4
+
 
 def split_namespace(namespace: str):
     """
@@ -156,6 +210,7 @@ def split_namespace(namespace: str):
 
     return project, service, version
 
+
 def set_context_env_variable(context_type: str, value: str) -> None:
     """
 
@@ -167,7 +222,6 @@ def set_context_env_variable(context_type: str, value: str) -> None:
 
     """
     type_upper = context_type.upper()
-    print("echo Setting context environment variables...;")
     if type_upper in ["PROJECT", "SERVICE", "VERSION"]:
         print(f"echo \tExporting {type_upper} to {value};")
         print(f"export {type_upper}={value};")
@@ -238,7 +292,9 @@ class SetContext(object):
             print(f"cd {path_str};")
     #memoize
 
-    def set_terminal_prompt(self):
+    def set_terminal_prompt(self, project=None,
+                            service=None,
+                            version=None):
         """
 
         Outputs a string to be evaluated by bash that will set the terminal prompt based on environment variables.
@@ -247,13 +303,13 @@ class SetContext(object):
         """
         prompt_string = "PS1="
 
-        if is_environment_variable_valid(CONTEXT.PROJECT):
+        if project:
             prompt_string += "'%F{65}'${PROJECT}"
 
-        if is_environment_variable_valid(CONTEXT.SERVICE):
+        if service:
             prompt_string += "'%F{default}:%F{46}'${SERVICE}"
 
-        if is_environment_variable_valid(CONTEXT.VERSION):
+        if version:
             prompt_string += "'%F{default}:%F{38}'${VERSION}"
 
         prompt_string += "'%F{default} >> ';"
@@ -270,8 +326,23 @@ class SetContext(object):
 
         :param project_name:
             The name of the project gcloud will create
+
         """
-        print(f"gcloud components update --quiet && gcloud projects create {project_name}")
+
+        print(f"gcloud components update --quiet && gcloud projects create {project_name};")
+
+    def set_gcloud_project(self, project_name: str) -> None:
+        """
+
+         Outputs a string to be evaluated by bash that will switch gcloud project.
+         Can be run from bash: eval `python setcontext.py sete_gcloud_project --project_name=<project_name>`
+
+         :param project_name:
+             The name of the project gcloud project
+         """
+
+        print(f"gcloud config set project {project_name};")
+
 
     def create_conda_env(self, env_name: str) -> None:
         """
@@ -281,7 +352,8 @@ class SetContext(object):
         :param env_name:
             The name of the conda environment, it is meant to match the project name
         """
-        print(f"conda create -y -q --name {env_name} python=3.9;")
+
+        print(f"conda create -y -q --name {env_name} python=3.8;")
 
     def set_conda_env(self, env_name: str) -> None:
         """
@@ -298,6 +370,7 @@ class SetContext(object):
         Outputs a string to be evaluated by bash that will initialize a git remo and use hub create to create a remote repo.
 
         """
+
         print("git init && hub create;")
 
     def print_project_variables(self):
@@ -309,13 +382,18 @@ class SetContext(object):
         """
 
         pprint("SetContext Environment Variables: ", 'yellow')
-        pprint(f"{CONTEXT.PROJECT}: {os.environ[CONTEXT.PROJECT]}", 'red', 1)
-        pprint(f"{CONTEXT.SERVICE}: {os.environ[CONTEXT.SERVICE]}", 'red', 1)
-        pprint(f"{CONTEXT.VERSION}: {os.environ[CONTEXT.VERSION]}", 'red', 1)
+        pprint(f"{CONTEXT.PROJECT}: {getProject()}", 'red', 1)
+        pprint(f"{CONTEXT.SERVICE}: {getService()}", 'red', 1)
+        pprint(f"{CONTEXT.VERSION}: {getVersion()}", 'red', 1)
+
+    def tprint(self, msg, color='default', indent=0):
+        #todo: change this to a debug print
+        print(f"echo {msg};")
 
 
     def setcontext(self, namespace: str, debug: int=0):
         """
+
         Main program to call all the sub functions for setting context between projects.
         This generates a bash script to be called from the shell and evaluated.
 
@@ -324,48 +402,49 @@ class SetContext(object):
 
         :param namespace:
             A string to determine where you are working. project:service:version
+
         """
 
         project, service, version = split_namespace(namespace)
-
+        self.tprint("Setting context")
         if debug:
-           print(f"echo Setting Context to namespace {project}:{service}:{version}...;")
+            print(f"echo Setting Context to namespace {project}:{service}:{version}...;")
 
         if project and is_project_name_valid_for_gcloud(project):
             clear_context_env_variables()
             set_context_env_variable(CONTEXT.PROJECT, project)
-
-            if does_project_exist(project):
-                self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT])
-                self.set_conda_env(env_name=os.environ[CONTEXT.PROJECT])
+            self.change_directory_path(project_name=project)
+            if does_gcloud_project_exist(project_name=project):
+                self.tprint("Project exists | sed 's/^/  /'")
+                self.set_gcloud_project(project_name=project)
+                self.set_conda_env(env_name=project)
 
             else:
-                if not does_gcloud_project_exist(project_name=project):
-                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT])
-                    self.create_gcloud_project(project_name=os.environ[CONTEXT.PROJECT])
-                    self.create_conda_env(env_name=os.environ[CONTEXT.PROJECT])
-                    self.create_git_repo()
+                self.tprint("Creating new project | sed 's/^/  /'")
+
+                self.create_gcloud_project(project_name=project)
+                self.create_conda_env(env_name=project)
+                self.create_git_repo()
+
+            self.set_terminal_prompt(project=project)
 
             if service:
                 set_context_env_variable(CONTEXT.SERVICE, service)
-                if does_service_version_exist(service) and not version:
-                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
-                                               service_name=os.environ[CONTEXT.SERVICE])
+                self.change_directory_path(project_name=project,
+                                           service_name=service)
 
-                else:
-                    #create new service
-                    set_context_env_variable(CONTEXT.VERSION, "v001")
-                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
-                                               service_name=os.environ[CONTEXT.SERVICE],
-                                               version_name=os.environ[CONTEXT.VERSION])
+                self.set_terminal_prompt(project=project,
+                                         service=service)
 
-                if version:
-                    set_context_env_variable(CONTEXT.VERSION, version)
-                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
-                                               service_name=os.environ[CONTEXT.SERVICE],
-                                               version_name=os.environ[CONTEXT.VERSION])
-            self.set_terminal_prompt()
+            if version:
+                set_context_env_variable(CONTEXT.VERSION, version)
+                self.change_directory_path(project_name=project,
+                                           service_name=service,
+                                           version_name=version)
 
+                self.set_terminal_prompt(project=project,
+                                         service=service,
+                                         version=version)
 
 if __name__ == '__main__':
     fire.Fire(SetContext)
