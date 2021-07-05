@@ -66,8 +66,6 @@ def does_gcloud_project_exist(project_name: str) -> bool:
     json_data = json.loads(json_str)
 
     project_names = [project['name'] for project in json_data]
-    prjnames = " ".join(project_names)
-    print(f"echo Gcloud projects : {prjnames};")
 
     return True if project_name in project_names else False
 
