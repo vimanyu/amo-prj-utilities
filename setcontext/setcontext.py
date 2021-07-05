@@ -37,12 +37,21 @@ def is_environment_variable_valid(var: str) -> bool:
     Function to check if variable exists and is non-empty.
 
     :param var:
-        Name of the environment variable.
+        Name of the environment variable. Should only use a CONTEXT member variable.
     :return:
     """
     return (var in os.environ.keys()) and (os.environ[var] != "")
 
-def is_project_name_valid(name: str) -> bool:
+def is_project_name_valid_for_gcloud(name: str) -> bool:
+    """
+
+    Tests for valid name for a gcloud project name.
+
+    :param name:
+        Project name.
+    :return:
+        True if name only has lower space letters, digits and a dash
+    """
     patterns = '^[a-z0-9/-]*$'
     if re.search(patterns, name):
         return True
@@ -265,7 +274,7 @@ class SetContext(object):
         """
 
         project, service, version = split_namespace(namespace)
-        if project and is_project_name_valid(project):
+        if project and is_project_name_valid_for_gcloud(project):
             clear_context_env_variables()
             set_context_env_variable(CONTEXT.PROJECT, project)
             if does_project_exist(project):
@@ -306,7 +315,7 @@ class SetContext(object):
 
 
 
-            is_project_name_valid(namespace)
+            is_project_name_valid_for_gcloud(namespace)
 
 
 
