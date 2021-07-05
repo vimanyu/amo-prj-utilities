@@ -159,16 +159,23 @@ class SetContext(object):
             print(path_str)
     #memoize
 
-    """eval `python setcontext.py set_terminal_prompt`"""
     def set_terminal_prompt(self):
+        """
+
+        Outputs a string to be evaluated by bash that will set the terminal prompt based on environment variables.
+        Can be run from bash: eval `python setcontext.py set_terminal_prompt`
+
+        """
         prompt_string = "PS1="
+
         if is_environment_variable_valid(CONTEXT.PROJECT):
             prompt_string += "'%F{55}'${PROJECT}"
+
         if is_environment_variable_valid(CONTEXT.SERVICE):
             prompt_string += "'%F{default}:%F{46}'${SERVICE}"
+
         if is_environment_variable_valid(CONTEXT.VERSION):
             prompt_string += "'%F{default}:%F{38}'${VERSION}"
-
 
         prompt_string += "'%F{default} >> '"
         print(prompt_string)
@@ -180,6 +187,7 @@ class SetContext(object):
         """
 
         Outputs a string to be evaluated by bash that will create a gcloud project.
+        Can be run from bash: eval `python setcontext.py create_gcloud_project --project_name=<project_name>`
 
         :param project_name:
             The name of the project gcloud will create
@@ -235,24 +243,41 @@ class SetContext(object):
         project, service, version = split_namespace(namespace)
         if project and is_project_name_valid(project):
             clear_context_env_variables()
+            set_context_env_variable(CONTEXT.PROJECT, project)
             if does_project_exist(project):
-                set_context_env_variable(CONTEXT.PROJECT, project)
+
                 self.change_directory_path(project_name=CONTEXT.PROJECT)
                 self.set_conda_env(env_name=CONTEXT.PROJECT)
-                self.set_terminal_prompt()
-
-
-
 
 
             else:
                 if not does_gcloud_project_exist():
-                    set_context_env_variable(CONTEXT.PROJECT, project)
                     self.change_directory_path(project_name=CONTEXT.PROJECT)
                     self.create_gcloud_project(project_name=CONTEXT.PROJECT)
                     self.create_conda_env(env_name=CONTEXT.PROJECT)
                     self.create_git_repo()
-                    self.set_terminal_prompt()
+
+            if service:
+                set_context_env_variable(CONTEXT.SERVICE, service)
+                if does_service_exist(service) and not version:
+                    self.change_directory_path(project_name=CONTEXT.PROJECT,
+                                               service_name=CONTEXT.SERVICE)
+
+
+                else:
+                    #create service
+                    self.change_directory_path(project_name=CONTEXT.PROJECT,
+                                               service_name=CONTEXT.SERVICE,
+                                               version_name='v001')
+
+                if version:
+                    set_context_env_variable(CONTEXT.VERSION, version)
+                    self.change_directory_path(project_name=CONTEXT.PROJECT,
+                                               service_name=CONTEXT.SERVICE,
+                                               version_name=CONTEXT.VERSION)
+            self.set_terminal_prompt()
+
+
 
 
 
