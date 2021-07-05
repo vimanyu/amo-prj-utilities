@@ -14,18 +14,32 @@ from termcolor import cprint
 #Build framework for  commandline tools.
 
 """
-function to handle bad version string
+Global variable for local git repo.
 """
-
 PATH = pathlib.Path.home() / "git"
 
+
 class CONTEXT:
+    """
+
+    Enum type class to remove strings from code.
+    These are the essential environment variable names.
+
+    """
     PROJECT = "PROJECT"
     SERVICE = "SERVICE"
     VERSION = "VERSION"
 
 
 def is_environment_variable_valid(var: str) -> bool:
+    """
+
+    Function to check if variable exists and is non-empty.
+
+    :param var:
+        Name of the environment variable.
+    :return:
+    """
     return (var in os.environ.keys()) and (os.environ[var] != "")
 
 def is_project_name_valid(name: str) -> bool:
