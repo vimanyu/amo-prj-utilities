@@ -48,7 +48,17 @@ def does_project_exist(project_name: str) -> bool:
     path /= project_name
     return path.is_dir()
 
-def does_service_exist(service_or_version_name: str) -> bool:
+def does_service_version_exist(service_or_version_name: str) -> bool:
+    """
+
+    Function to test if the service or version exists. Essentially checking if a sub namespace exists.
+
+    :param service_or_version_name:
+        Name of the service or version
+
+    :return:
+        True if the path is an existing directory.
+    """
     path = pathlib.Path.cwd()
     path /= service_or_version_name
     return path.is_dir()
@@ -259,7 +269,7 @@ class SetContext(object):
 
             if service:
                 set_context_env_variable(CONTEXT.SERVICE, service)
-                if does_service_exist(service) and not version:
+                if does_service_version_exist(service) and not version:
                     self.change_directory_path(project_name=CONTEXT.PROJECT,
                                                service_name=CONTEXT.SERVICE)
 
