@@ -1,5 +1,6 @@
 
 import fire
+import functools
 import json
 import os
 import re
@@ -30,53 +31,6 @@ class CONTEXT:
     SERVICE = "SERVICE"
     VERSION = "VERSION"
 
-def getProject():
-    """
-
-    Get PROJECT environment variable
-
-    :return:
-        return the project environmnet variable
-
-    """
-
-    return os.environ[CONTEXT.PROJECT]
-
-def getService():
-    """
-
-    Get SERVICE environment variable
-
-    :return:
-        return the service environmnet variable
-
-    """
-    return os.environ[CONTEXT.SERVICE]
-
-def getVersion():
-    """
-
-    Get VERSION environment variable
-
-    :return:
-        return the version environmnet variable
-
-    """
-    return os.environ[CONTEXT.VERSION]
-
-
-def is_environment_variable_valid(var: str) -> bool:
-    """
-
-    Function to check if variable exists and is non-empty.
-
-    :param var:
-        Name of the environment variable. Should only use a CONTEXT member variable.
-    :return:
-    """
-
-    return (var in os.environ.keys()) and (os.environ[var] != "")
-
 
 def is_project_name_valid_for_gcloud(name: str) -> bool:
     """
@@ -95,7 +49,7 @@ def is_project_name_valid_for_gcloud(name: str) -> bool:
     else:
         return False
 
-
+@functools.lru_cache
 def does_gcloud_project_exist(project_name: str) -> bool:
     """
 
@@ -223,7 +177,7 @@ def set_context_env_variable(context_type: str, value: str) -> None:
     """
     type_upper = context_type.upper()
     if type_upper in ["PROJECT", "SERVICE", "VERSION"]:
-        print(f"echo \tExporting {type_upper} to {value};")
+        print(f"echo \tExporting {value} to {type_upper} | sed 's/^/  /';")
         print(f"export {type_upper}={value};")
 
 
@@ -237,6 +191,7 @@ def clear_context_env_variables():
     print("echo Clearing context environment variables...;")
     for var in ["PROJECT", "SERVICE", "VERSION"]:
         set_context_env_variable(context_type=var, value='')
+    print("echo \n;")
 
 
 def pprint(msg: str, color: str = 'default', indent: int = 0) -> None:
@@ -382,9 +337,9 @@ class SetContext(object):
         """
 
         pprint("SetContext Environment Variables: ", 'yellow')
-        pprint(f"{CONTEXT.PROJECT}: {getProject()}", 'red', 1)
-        pprint(f"{CONTEXT.SERVICE}: {getService()}", 'red', 1)
-        pprint(f"{CONTEXT.VERSION}: {getVersion()}", 'red', 1)
+        pprint(f"{CONTEXT.PROJECT}: {os.environ[CONTEXT.PROJECT]}", 'red', 1)
+        pprint(f"{CONTEXT.SERVICE}: {os.environ[CONTEXT.SERVICE]}", 'red', 1)
+        pprint(f"{CONTEXT.VERSION}: {os.environ[CONTEXT.VERSION]}", 'red', 1)
 
     def tprint(self, msg, color='default', indent=0):
         #todo: change this to a debug print
