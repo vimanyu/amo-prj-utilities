@@ -91,7 +91,7 @@ def is_version_string_valid(version_string: str):
     #replace with regex
     return version_string.startswith("v") and version_string[1:].isdigit() and len(version_string) == 4
 
-def split_namespace(namespace: str) -> tuple(str):
+def split_namespace(namespace: str):
     project = ""
     service = ""
     version = ""
@@ -126,8 +126,9 @@ def set_context_env_variable(context_type: str, value: str) -> None:
 
     """
     type_upper = context_type.upper()
+    print("echo Setting context environment variables...;")
     if type_upper in ["PROJECT", "SERVICE", "VERSION"]:
-        print(f"echo Setting {type_upper} to {value};")
+        print(f"echo \tExporting {type_upper} to {value};")
         print(f"export {type_upper}={value};")
 
 
@@ -138,6 +139,7 @@ def clear_context_env_variables():
     from a lower namespace such as a service or a version, we will want the environment variables to be empty.
 
     """
+    print("echo Clearing context environment variables...;")
     for var in ["PROJECT", "SERVICE", "VERSION"]:
         set_context_env_variable(context_type=var, value='')
 
@@ -166,6 +168,7 @@ class SetContext(object):
                               service_name=None,
                               version_name=None):
         """
+
         This builds the path of the project from environment variables. If no project environment variables exist,
         Then the directory defaults to ~/git
 
@@ -186,11 +189,12 @@ class SetContext(object):
         path_str = path.absolute().as_posix()
 
         if path.is_dir():
-            print(path_str)
+            print(f"echo Setting dir to {path_str};")
+            print(f"cd {path_str};")
 
         else:
             path.mkdir(parents=True, exist_ok=True)
-            print(path_str)
+            print(f"cd {path_str};")
     #memoize
 
     def set_terminal_prompt(self):
@@ -203,7 +207,7 @@ class SetContext(object):
         prompt_string = "PS1="
 
         if is_environment_variable_valid(CONTEXT.PROJECT):
-            prompt_string += "'%F{55}'${PROJECT}"
+            prompt_string += "'%F{65}'${PROJECT}"
 
         if is_environment_variable_valid(CONTEXT.SERVICE):
             prompt_string += "'%F{default}:%F{46}'${SERVICE}"
@@ -211,7 +215,7 @@ class SetContext(object):
         if is_environment_variable_valid(CONTEXT.VERSION):
             prompt_string += "'%F{default}:%F{38}'${VERSION}"
 
-        prompt_string += "'%F{default} >> '"
+        prompt_string += "'%F{default} >> ';"
         print(prompt_string)
 
 
@@ -236,7 +240,7 @@ class SetContext(object):
         :param env_name:
             The name of the conda environment, it is meant to match the project name
         """
-        print(f"conda create -y -q --name {env_name} python=3.9")
+        print(f"conda create -y -q --name {env_name} python=3.9;")
 
     def set_conda_env(self, env_name: str) -> None:
         """
@@ -245,7 +249,7 @@ class SetContext(object):
 
         :param env_name:
         """
-        print(f"conda activate {env_name}")
+        print(f"conda activate {env_name};")
 
     def create_git_repo(self):
         """
@@ -285,60 +289,44 @@ class SetContext(object):
 
         project, service, version = split_namespace(namespace)
         if debug:
-            pprint(f"Setting Context to namespace {project}:{service}:{version}", 'white')
+           print(f"echo Setting Context to namespace {project}:{service}:{version}...;")
+
         if project and is_project_name_valid_for_gcloud(project):
             clear_context_env_variables()
             set_context_env_variable(CONTEXT.PROJECT, project)
             if does_project_exist(project):
 
-                self.change_directory_path(project_name=CONTEXT.PROJECT)
-                self.set_conda_env(env_name=CONTEXT.PROJECT)
+                self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT])
+                self.set_conda_env(env_name=os.environ[CONTEXT.PROJECT])
 
 
             else:
-                if not does_gcloud_project_exist():
-                    self.change_directory_path(project_name=CONTEXT.PROJECT)
-                    self.create_gcloud_project(project_name=CONTEXT.PROJECT)
-                    self.create_conda_env(env_name=CONTEXT.PROJECT)
+                if not does_gcloud_project_exist(project_name=project):
+                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT])
+                    self.create_gcloud_project(project_name=os.environ[CONTEXT.PROJECT])
+                    self.create_conda_env(env_name=os.environ[CONTEXT.PROJECT])
                     self.create_git_repo()
 
             if service:
                 set_context_env_variable(CONTEXT.SERVICE, service)
                 if does_service_version_exist(service) and not version:
-                    self.change_directory_path(project_name=CONTEXT.PROJECT,
-                                               service_name=CONTEXT.SERVICE)
+                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
+                                               service_name=os.environ[CONTEXT.SERVICE])
 
 
                 else:
-                    #create service
-                    self.change_directory_path(project_name=CONTEXT.PROJECT,
-                                               service_name=CONTEXT.SERVICE,
-                                               version_name='v001')
+                    #create new service
+                    set_context_env_variable(CONTEXT.VERSION, "v001")
+                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
+                                               service_name=os.environ[CONTEXT.SERVICE],
+                                               version_name=os.environ[CONTEXT.VERSION])
 
                 if version:
                     set_context_env_variable(CONTEXT.VERSION, version)
-                    self.change_directory_path(project_name=CONTEXT.PROJECT,
-                                               service_name=CONTEXT.SERVICE,
-                                               version_name=CONTEXT.VERSION)
+                    self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
+                                               service_name=os.environ[CONTEXT.SERVICE],
+                                               version_name=os.environ[CONTEXT.VERSION])
             self.set_terminal_prompt()
-
-
-
-
-
-
-            is_project_name_valid_for_gcloud(namespace)
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
