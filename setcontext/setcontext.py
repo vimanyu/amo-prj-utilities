@@ -60,6 +60,15 @@ def is_project_name_valid_for_gcloud(name: str) -> bool:
         return False
 
 def does_gcloud_project_exist(project_name: str) -> bool:
+    """
+
+    Test to see if a gcloud project exists.
+
+    :param project_name:
+        Name of project.
+    :return: bool
+        True if a gcloud project exists with the name of project_name
+    """
     output = subprocess.check_output("gcloud projects list --format json".split(" "))
     json_str = output.decode('utf-8')
     json_data = json.loads(json_str)
@@ -68,6 +77,16 @@ def does_gcloud_project_exist(project_name: str) -> bool:
     return False if project_name in project_names else True
 
 def does_project_exist(project_name: str) -> bool:
+    """
+
+    Test if a directory exists in the local git repo.
+
+    :param project_name:
+        Name of the project.
+    :return: bool
+        True if a folder of name project_name exists in the local git repo.
+
+    """
     path = PATH
     path /= project_name
     return path.is_dir()
@@ -80,18 +99,39 @@ def does_service_version_exist(service_or_version_name: str) -> bool:
     :param service_or_version_name:
         Name of the service or version
 
-    :return:
+    :return: bool
         True if the path is an existing directory.
     """
     path = pathlib.Path.cwd()
     path /= service_or_version_name
     return path.is_dir()
 
-def is_version_string_valid(version_string: str):
+def is_version_string_valid(version_string: str) -> bool:
+    """
+
+    Checks if the version string is of the right format.
+
+    :param version_string:
+        A string in the format v<XXX>
+    :return:  bool
+        True if version_string starts with v, and ends with 3 numbers.
+    """
     #replace with regex
     return version_string.startswith("v") and version_string[1:].isdigit() and len(version_string) == 4
 
 def split_namespace(namespace: str):
+    """
+
+    Splits the namespace string into seperate variables.
+
+    :param namespace:
+        The context namespace in the format project:service:version
+
+    :rtype: str,str,str
+        the project, service and version seperated into their own variables. If contexts weren't present in the namespace
+        the strings return empty.
+
+    """
     project = ""
     service = ""
     version = ""
@@ -99,7 +139,8 @@ def split_namespace(namespace: str):
     # replace with argparse for better error handling and help?
     if not ":" in namespace:
         project = namespace
-        service, version = ""
+        service = ""
+        version = ""
 
     else:
         split_context = namespace.split(":")
@@ -257,7 +298,7 @@ class SetContext(object):
         Outputs a string to be evaluated by bash that will initialize a git remo and use hub create to create a remote repo.
 
         """
-        print("git init && hub create")
+        print("git init && hub create;")
 
     def print_project_variables(self):
         """
@@ -265,14 +306,12 @@ class SetContext(object):
 
             python SetContext.py print_project_variables
 
-
         """
 
         pprint("SetContext Environment Variables: ", 'yellow')
         pprint(f"{CONTEXT.PROJECT}: {os.environ[CONTEXT.PROJECT]}", 'red', 1)
         pprint(f"{CONTEXT.SERVICE}: {os.environ[CONTEXT.SERVICE]}", 'red', 1)
         pprint(f"{CONTEXT.VERSION}: {os.environ[CONTEXT.VERSION]}", 'red', 1)
-
 
 
     def setcontext(self, namespace: str, debug: int=0):
@@ -288,17 +327,17 @@ class SetContext(object):
         """
 
         project, service, version = split_namespace(namespace)
+
         if debug:
            print(f"echo Setting Context to namespace {project}:{service}:{version}...;")
 
         if project and is_project_name_valid_for_gcloud(project):
             clear_context_env_variables()
             set_context_env_variable(CONTEXT.PROJECT, project)
-            if does_project_exist(project):
 
+            if does_project_exist(project):
                 self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT])
                 self.set_conda_env(env_name=os.environ[CONTEXT.PROJECT])
-
 
             else:
                 if not does_gcloud_project_exist(project_name=project):
@@ -312,7 +351,6 @@ class SetContext(object):
                 if does_service_version_exist(service) and not version:
                     self.change_directory_path(project_name=os.environ[CONTEXT.PROJECT],
                                                service_name=os.environ[CONTEXT.SERVICE])
-
 
                 else:
                     #create new service
