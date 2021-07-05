@@ -81,12 +81,15 @@ def split_namespace(namespace: str) -> tuple(str):
 
     return project, service, version
 
-def set_context_env_variable(context_type: str, value: str):
+def set_context_env_variable(context_type: str, value: str) -> None:
     """
 
     :param context_type:
         The type of variable replaced to set context, either PROJECT, SERVICE or VERSION
+
     :param value:
+        The value to set for the environment variable.
+
     """
     type_upper = context_type.upper()
     if type_upper in ["PROJECT", "SERVICE", "VERSION"]:
@@ -96,8 +99,10 @@ def set_context_env_variable(context_type: str, value: str):
 
 def clear_context_env_variables():
     """
+
     Sets the context environment variables to '' to avoid shell navigation errors. If a user sets the contexts to a project
     from a lower namespace such as a service or a version, we will want the environment variables to be empty.
+
     """
     for var in ["PROJECT", "SERVICE", "VERSION"]:
         set_context_env_variable(context_type=var, value='')
