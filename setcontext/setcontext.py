@@ -16,6 +16,7 @@ from termcolor import cprint
 """
 Global variable for local git repo.
 """
+DEBUG = True
 PATH = pathlib.Path.home() / "git"
 
 
@@ -255,13 +256,22 @@ class SetContext(object):
         print("git init && hub create")
 
     def print_project_variables(self):
-        pprint(os.environ[CONTEXT.PROJECT], 'red', 2)
-        pprint(os.environ[CONTEXT.SERVICE], 'red', 2)
-        pprint(os.environ[CONTEXT.VERSION], 'red', 2)
+        """
+            Prints out the essential environment variables.
+
+            python SetContext.py print_project_variables
+
+
+        """
+
+        pprint("SetContext Environment Variables: ", 'yellow')
+        pprint(f"{CONTEXT.PROJECT}: {os.environ[CONTEXT.PROJECT]}", 'red', 1)
+        pprint(f"{CONTEXT.SERVICE}: {os.environ[CONTEXT.SERVICE]}", 'red', 1)
+        pprint(f"{CONTEXT.VERSION}: {os.environ[CONTEXT.VERSION]}", 'red', 1)
 
 
 
-    def setcontext(self, namespace: str):
+    def setcontext(self, namespace: str, debug: int=0):
         """
         Main program to call all the sub functions for setting context between projects.
         This generates a bash script to be called from the shell and evaluated.
@@ -274,6 +284,8 @@ class SetContext(object):
         """
 
         project, service, version = split_namespace(namespace)
+        if debug:
+            pprint(f"Setting Context to namespace {project}:{service}:{version}", 'white')
         if project and is_project_name_valid_for_gcloud(project):
             clear_context_env_variables()
             set_context_env_variable(CONTEXT.PROJECT, project)
