@@ -7,6 +7,7 @@ alias pprint="python /Users/andrewoseen/git/amo-prj-utilities/setcontext/setcont
 set_project_envvar () {
   pprint "Setting environment variables" green 1
   eval `python /Users/andrewoseen/git/amo-prj-utilities/setcontext/setcontext.py set_env $1`
+  eval `python /Users/andrewoseen/git/amo-prj-utilities/setcontext/setcontext.py set_terminal_prompt`
 }
 
 validate_gcloud_project () {
@@ -61,21 +62,9 @@ newcontext () {
 	#initialize_git_repo
 }
 
-set_context () {
-	#split text and store in env, validate values
-	#set gcloud project
-	#build/change directories
-	#set change conda env
-	#init git
-
-
-
-	pprint "Setting context to: $1" green
-	set_project_envvar $1
-  #set_gcloud_project $context
-	#change_directory $context
-	#conda activate $context
-
+setcontext () {
+  conda activate amo-prj-utilities;
+  eval `python /Users/andrewoseen/git/amo-prj-utilities/setcontext/setcontext.py setcontext $1`;
 }
 
 delcontext () {
