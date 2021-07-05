@@ -93,6 +93,7 @@ def set_context_env_variable(context_type: str, value: str):
         print(f"echo Setting {type_upper} to {value};")
         print(f"export {type_upper}={value};")
 
+
 def clear_context_env_variables():
     """
     Sets the context environment variables to '' to avoid shell navigation errors. If a user sets the contexts to a project
@@ -102,6 +103,21 @@ def clear_context_env_variables():
         set_context_env_variable(context_type=var, value='')
 
 
+def pprint(msg: str, color: str = 'default', indent: int = 0) -> None:
+    """
+
+    Print's colored text to the terminal with arguments for indents
+
+    :param msg:
+        The message
+
+    :param color:
+        Termcolor.cprints colors 'red', 'green', 'blue'
+
+    :param indent:
+        The amount of tabs you want precedding your message.
+    """
+    cprint("\t"*indent + msg, color)
 
 
 class SetContext(object):
@@ -192,17 +208,10 @@ class SetContext(object):
         """
         print("git init && hub create")
 
-    def set_project(self):
-        print("conda activate ${PROJECT}")
-        #print("PROJECT")
-        self.set_terminal_prompt()
-        print("git init")
-        print("hub create")
-
     def print_project_variables(self):
-        self.pprint(os.environ[CONTEXT.PROJECT], 'red', 2)
-        self.pprint(os.environ[CONTEXT.SERVICE], 'red', 2)
-        self.pprint(os.environ[CONTEXT.VERSION], 'red', 2)
+        pprint(os.environ[CONTEXT.PROJECT], 'red', 2)
+        pprint(os.environ[CONTEXT.SERVICE], 'red', 2)
+        pprint(os.environ[CONTEXT.VERSION], 'red', 2)
 
 
 
@@ -247,38 +256,7 @@ class SetContext(object):
 
 
 
-        if not is_environment_variable_valid(CONTEXT.PROJECT):
-            if os.environ["PROJECT"] != namespace:
 
-
-            #create project
-
-            self.
-            self.set_environment_variables()
-            self.create_conda_env(os.environ['PROJECT'])
-            self.set_conda_env(os.environ['PROJECT'])
-            self.set_terminal_prompt()
-        else:
-            #set path to change dir
-            self.change_directory_path(project=os.environ["PROJECT"])
-            #set conda env
-            #set gcloud project
-            #set terminal prompt
-            #serach for service
-            if not is_environment_variable_valid("SERVICE"):
-                #create service
-                pass
-
-            else:
-                pass
-                self.build_directory_path(project=os.environ["PROJECT"])
-                #change to service
-
-
-
-    @classmethod
-    def pprint(cls, msg, color, indent=0):
-        cprint("\t"*indent + msg, color)
 
 
 
